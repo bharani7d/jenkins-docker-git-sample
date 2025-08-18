@@ -4,14 +4,18 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                // This ensures Jenkins clones your repo first
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          userRemoteConfigs: [[url: 'https://github.com/bharani7d/jenkins-docker-git-sample.git']]
+                ])
             }
         }
 
         stage('Build') {
             steps {
-                echo "Running build..."
-                // Your build commands here
+                echo 'Build stage running...'
+                // Add your build commands here
             }
         }
     }
