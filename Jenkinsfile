@@ -4,15 +4,12 @@ pipeline {
     environment {
         DOCKERHUB_USER = 'bharani7d'
         IMAGE_NAME     = 'devops-docker-sample'
-        // In Step 2 we will create Jenkins credentials with ID 'dockerhub'
-        // that holds your DockerHub username/password or access token.
-        REGISTRY_CRED  = 'dockerhub'
+        REGISTRY_CRED  = 'dockerhub'   // Jenkins credentials ID
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Uses the same repo this Jenkinsfile sits in
                 checkout scm
             }
         }
