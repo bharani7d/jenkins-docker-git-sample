@@ -1,41 +1,50 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKERHUB_USER = 'bharani7d'
+        IMAGE_NAME     = 'devops-docker-sample'
+        // In Step 2 we will create Jenkins credentials with ID 'dockerhub'
+        // that holds your DockerHub username/password or access token.
+        REGISTRY_CRED  = 'dockerhub'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/bharani7d/jenkins-docker-git-sample.git'
+                // Uses the same repo this Jenkinsfile sits in
+                checkout scm
             }
         }
 
-        stage('Verify Workspace') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Listing files in workspace...'
-                sh 'ls -la'
+                sh '''
+                  docker build \
+                    -t $DOCKERHUB_USER/$IMAGE_NAME:latest \
+                    -t $DOCKERHUB_USER/$IMAGE_NAME:$BUILD_NUMBER \
+                    .
+                '''
             }
         }
 
-        stage('Test Python App') {
+        stage('Login & Push to Docker Hub') {
             steps {
-                echo 'Running Python app...'
-                sh 'python3 app.py || true'
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                echo 'Building Docker image...'
-                sh 'docker build -t my-sample-app .'
+                withCredentials([usernamePassword(credentialsId: REGISTRY_CRED, usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+                    sh '''
+                      echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+                      docker push $DOCKERHUB_USER/$IMAGE_NAME:latest
+                      docker push $DOCKERHUB_USER/$IMAGE_NAME:$BUILD_NUMBER
+                      docker logout
+                    '''
+                }
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Build succeeded!'
-        }
-        failure {
-            echo '❌ Build failed. Check the console output.'
+        always {
+            echo "Pipeline finished. Image: $DOCKERHUB_USER/$IMAGE_NAME"
         }
     }
 }
