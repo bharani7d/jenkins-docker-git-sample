@@ -4,30 +4,38 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repo into workspace
                 git branch: 'main', url: 'https://github.com/bharani7d/jenkins-docker-git-sample.git'
             }
         }
 
-        stage('Build') {
+        stage('Verify Workspace') {
             steps {
-                echo 'Build stage running...'
-                // Example: list files to confirm repo is cloned
+                echo 'Listing files in workspace...'
                 sh 'ls -la'
-                // Add your build commands here, e.g., Docker build, Python scripts, etc.
             }
         }
 
-        stage('Post-Build') {
+        stage('Test Python App') {
             steps {
-                echo 'Build finished successfully!'
+                echo 'Running Python app...'
+                sh 'python3 app.py || true'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo 'Building Docker image...'
+                sh 'docker build -t my-sample-app .'
             }
         }
     }
 
     post {
+        success {
+            echo '✅ Build succeeded!'
+        }
         failure {
-            echo 'Build failed. Check the console output.'
+            echo '❌ Build failed. Check the console output.'
         }
     }
 }
